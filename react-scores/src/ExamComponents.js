@@ -18,10 +18,9 @@ function ExamTable(props) {
             </tr>
         </thead>
         <tbody>
-            <ExamRow />
-            <ExamRow />
-            <ExamRow />
-            <ExamRow />
+            {props.exams.map((exam => <ExamRow key={exam.coursecode} exam={exam} 
+            examName={props.courses.filter(c=>c.coursecode === exam.coursecode)[0].name}
+             />))}
         </tbody>
     </Table>
     );
@@ -29,7 +28,7 @@ function ExamTable(props) {
 
 function ExamRow(props) {
     return (<tr>
-        <ExamInfo/>
+        <ExamInfo {...props} />
         <ExamControls/>
     </tr>
     );
@@ -37,9 +36,9 @@ function ExamRow(props) {
 
 function ExamInfo(props) {
     return (<>
-        <td>Information systems security</td>
-        <td>28</td>
-        <td>01/03/2021</td>
+        <td>{props.examName}</td>
+        <td>{props.exam.score}</td>
+        <td>{props.exam.date.format('DD MMM YYYY')}</td>
     </>)
 }
 
