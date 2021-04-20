@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import { Col, Table } from 'react-bootstrap';
 import { iconDelete, iconEdit } from './icons'
+
+import { PrivacyMode, EditMode } from './createContexts';
 
 function Title(props) {
     return (<Col>
@@ -10,10 +12,10 @@ function Title(props) {
 
 function ExamTable(props) {
 
-    const [exams, setExams] = useState(props.exams) ;
+    const [exams, setExams] = useState(props.exams);
 
     const deleteExam = (code) => {
-        setExams( oldExams => oldExams.filter( exam => exam.coursecode !== code) ) ;
+        setExams(oldExams => oldExams.filter(exam => exam.coursecode !== code));
     }
 
     return (<Table striped bordered>
@@ -26,10 +28,10 @@ function ExamTable(props) {
             </tr>
         </thead>
         <tbody>
-            {exams.map((exam => <ExamRow key={exam.coursecode} exam={exam} 
-            examName={props.courses.filter(c=>c.coursecode === exam.coursecode)[0].name}
-            deleteExam={deleteExam}
-             />))}
+            {exams.map((exam => <ExamRow key={exam.coursecode} exam={exam}
+                examName={props.courses.filter(c => c.coursecode === exam.coursecode)[0].name}
+                deleteExam={deleteExam}
+            />))}
         </tbody>
     </Table>
     );
@@ -38,21 +40,24 @@ function ExamTable(props) {
 function ExamRow(props) {
     return (<tr>
         <ExamInfo {...props} />
-        <ExamControls exam={props.exam} deleteExam={props.deleteExam}/>
+        <EditMode.Consumer>
+            {editable => editable ? <ExamControls exam={props.exam} deleteExam={props.deleteExam} /> : <td><i>disabled</i></td>}
+        </EditMode.Consumer>
     </tr>
     );
 }
 
 function ExamInfo(props) {
+    let privacyMode = useContext(PrivacyMode)
     return (<>
         <td>{props.examName}</td>
-        <td>{props.exam.score}</td>
-        <td>{props.exam.date.format('DD MMM YYYY')}</td>
+        <td>{privacyMode ? "X" : props.exam.score}</td>
+        <td>{privacyMode ? "X" : props.exam.date.format('DD MMM YYYY')}</td>
     </>)
 }
 
 function ExamControls(props) {
-    return <td>{iconEdit} <span onClick={()=>props.deleteExam(props.exam.coursecode)}>{iconDelete}</span></td> ;
+    return <td>{iconEdit} <span onClick={() => props.deleteExam(props.exam.coursecode)}>{iconDelete}</span></td>;
 }
 
 export { Title, ExamTable };
