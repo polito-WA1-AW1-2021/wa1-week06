@@ -13,6 +13,8 @@ function ExamTable(props) {
 
     const [exams, setExams] = useState(props.exams);
 
+    const examCodes = exams.map(exam => exam.coursecode) ;
+
     const deleteExam = (code) => {
         setExams(oldExams => oldExams.filter(exam => exam.coursecode !== code));
     }
@@ -39,7 +41,7 @@ function ExamTable(props) {
                 />))}
             </tbody>
         </Table>
-        <ExamForm courses={props.courses} addExam={addExam} />
+        <ExamForm courses={props.courses.filter(course => !examCodes.includes(course.coursecode))} addExam={addExam} />
     </>
     );
 }
@@ -68,13 +70,30 @@ function ExamForm(props) {
     const [course, setCourse] = useState('') ;  // props.courses[0].coursecode
     const [score, setScore] = useState('') ;
     const [date, setDate] = useState('') ;
-
+    const [errorMessage, setErrorMessage] = useState() ;
+    
     const handleAdd = (event) => {
         event.preventDefault() ;
 
-        const exam = { coursecode: course, score: score, date: dayjs(date) } ;
         // MUST DO VALIDATION!!!!
-        props.addExam(exam);
+        let valid = true ;
+        if(course==='' || score==='' || date==='')
+            valid = false ;
+        const scorenumber = +score ;
+        if(scorenumber<18 || scorenumber>30)
+            valid = false ;
+        // ADD MORE CHECKS....
+
+        if(valid) {
+            setErrorMessage('') 
+            const exam = { coursecode: course, score: scorenumber, date: dayjs(date) } ;
+            props.addExam(exam);
+            setCourse('');
+            setScore('');
+            setDate('');
+        } else {
+            setErrorMessage('Error in the form...') ;
+        }
 
     } ;
 
@@ -84,9 +103,10 @@ function ExamForm(props) {
             <option value='' disabled>Choose one...</option>
             {props.courses.map(course => <option key={course.coursecode} value={course.coursecode}>{course.name}</option>)}
             </select><br />
-        Score: <input type='text' value={score} onChange={(event)=>{setScore(event.target.value)}} /><br />
+        Score: <input type='number' min={18} max={30} value={score} onChange={(event)=>{setScore(event.target.value)}} /><br />
         Date: <input type='date' value={date} onChange={ev=>setDate(ev.target.value)}/><br />
-            <button onClick={handleAdd}>Add</button>
+            <button onClick={handleAdd}>Add</button><br/>
+            <span style={{color:'red'}}>{errorMessage}</span>
         </form>);
 }
 
