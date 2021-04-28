@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
 import { useState } from 'react';
-import { Col, Table } from 'react-bootstrap';
+import { Button, Col, Form, Table } from 'react-bootstrap';
 import { iconDelete, iconEdit } from './icons'
 
 function Title(props) {
@@ -72,7 +72,7 @@ function ExamForm(props) {
     const [date, setDate] = useState('') ;
     const [errorMessage, setErrorMessage] = useState() ;
     
-    const handleAdd = (event) => {
+    const handleSubmit = (event) => {
         event.preventDefault() ;
 
         // MUST DO VALIDATION!!!!
@@ -98,16 +98,26 @@ function ExamForm(props) {
     } ;
 
     return (
-        <form>
-        Exam: <select value={course} onChange={ev=>setCourse(ev.target.value)}>
-            <option value='' disabled>Choose one...</option>
-            {props.courses.map(course => <option key={course.coursecode} value={course.coursecode}>{course.name}</option>)}
-            </select><br />
-        Score: <input type='number' min={18} max={30} value={score} onChange={(event)=>{setScore(event.target.value)}} /><br />
-        Date: <input type='date' value={date} onChange={ev=>setDate(ev.target.value)}/><br />
-            <button onClick={handleAdd}>Add</button><br/>
-            <span style={{color:'red'}}>{errorMessage}</span>
-        </form>);
+        <Form>
+            <span style={{ color: 'red' }}>{errorMessage}</span>
+            <Form.Group controlId='selectedCourse'>
+                <Form.Label>Course</Form.Label>
+                <Form.Control as="select" value={course}
+                    onChange={ev => setCourse(ev.target.value)}>
+                    <option disabled hidden value=''>choose...</option>
+                    {props.courses.map(course => <option key={course.coursecode} value={course.coursecode}>{course.name}</option>)}
+                </Form.Control>
+            </Form.Group>
+            <Form.Group controlId='selectedScore'>
+                <Form.Label>Score</Form.Label>
+                <Form.Control type='number' min={18} max={31} value={score} onChange={ev => setScore(ev.target.value)} />
+            </Form.Group>
+            <Form.Group controlId='selectedDate'>
+                <Form.Label>Date</Form.Label>
+                <Form.Control type='date' value={date} onChange={ev => setDate(ev.target.value)} />
+            </Form.Group>
+            <Button onClick={handleSubmit}>Save</Button> <Button variant='secondary' >Cancel</Button>
+        </Form>);
 }
 
 export { Title, ExamTable };
