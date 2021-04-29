@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import { useState } from 'react';
 import { Button, Col, Form, Table } from 'react-bootstrap';
-import { Link, Redirect, Route, Switch } from 'react-router-dom';
+import { Link, Redirect, Route, Switch, useLocation } from 'react-router-dom';
 import { iconDelete, iconEdit } from './icons'
 
 function Title(props) {
@@ -25,6 +25,12 @@ function ExamTable(props) {
         setExams(oldExams => [...oldExams, newExam]);
     };
 
+    const updateExam = (newExam) => {
+        setExams( oldState => oldState.map( 
+            (exam) => exam.coursecode===newExam.coursecode ? newExam : exam
+            ) ) ;
+    }
+
     return (<Switch>
         <Route path='/' exact>
             <Table striped bordered>
@@ -46,9 +52,11 @@ function ExamTable(props) {
             <Link to='/add'><Button variant='success'>Add</Button></Link>
         </Route>
         <Route path='/add'>
-            <ExamForm courses={props.courses.filter(course => !examCodes.includes(course.coursecode))} addExam={addExam} />
+            <ExamForm courses={props.courses.filter(course => !examCodes.includes(course.coursecode))} addOrUpdateExam={addExam} />
         </Route>
-        <Route path='/update'></Route>
+        <Route path='/update'>
+            <ExamForm courses={props.courses} addOrUpdateExam={updateExam}/>
+        </Route>
     </Switch>
     );
 }
@@ -70,13 +78,20 @@ function ExamInfo(props) {
 }
 
 function ExamControls(props) {
-    return <td>{iconEdit} <span onClick={() => props.deleteExam(props.exam.coursecode)}>{iconDelete}</span></td>;
+    return <td>
+        <Link to={{pathname:'/update', state: {exam: props.exam} }}>{iconEdit}</Link>
+        <span onClick={() => props.deleteExam(props.exam.coursecode)}>{iconDelete}</span>
+        </td>;
 }
 
 function ExamForm(props) {
-    const [course, setCourse] = useState('');  // props.courses[0].coursecode
-    const [score, setScore] = useState('');
-    const [date, setDate] = useState('');
+    const location = useLocation() ;
+    // location.state is defined => we are in Update mode, and location.state.exam has the starting values
+    // location.state is undefined => we are in Add mode
+
+    const [course, setCourse] = useState(location.state ? location.state.exam.coursecode : '');  // props.courses[0].coursecode
+    const [score, setScore] = useState(location.state ? location.state.exam.score : '');
+    const [date, setDate] = useState(location.state ? location.state.exam.date.format('YYYY-MM-DD') : dayjs().format('YYYY-MM-DD'));
     const [errorMessage, setErrorMessage] = useState();
 
     const [submitted, setSubmitted] = useState(false) ;
@@ -96,7 +111,7 @@ function ExamForm(props) {
         if (valid) {
             setErrorMessage('')
             const exam = { coursecode: course, score: scorenumber, date: dayjs(date) };
-            props.addExam(exam);
+            props.addOrUpdateExam(exam);
 
             // GO BACK TO THE HOME PAGE
             setSubmitted(true) ;
@@ -117,6 +132,7 @@ function ExamForm(props) {
             <Form.Group controlId='selectedCourse'>
                 <Form.Label>Course</Form.Label>
                 <Form.Control as="select" value={course}
+                    disabled={location.state}
                     onChange={ev => setCourse(ev.target.value)}>
                     <option disabled hidden value=''>choose...</option>
                     {props.courses.map(course => <option key={course.coursecode} value={course.coursecode}>{course.name}</option>)}
