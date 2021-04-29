@@ -1,6 +1,7 @@
 import dayjs from 'dayjs';
 import { useState } from 'react';
 import { Button, Col, Form, Table } from 'react-bootstrap';
+import { Link, Redirect, Route, Switch } from 'react-router-dom';
 import { iconDelete, iconEdit } from './icons'
 
 function Title(props) {
@@ -13,7 +14,7 @@ function ExamTable(props) {
 
     const [exams, setExams] = useState(props.exams);
 
-    const examCodes = exams.map(exam => exam.coursecode) ;
+    const examCodes = exams.map(exam => exam.coursecode);
 
     const deleteExam = (code) => {
         setExams(oldExams => oldExams.filter(exam => exam.coursecode !== code));
@@ -21,28 +22,34 @@ function ExamTable(props) {
 
     const addExam = (newExam) => {
         // exams.push(exam) ; NOOO
-        setExams( oldExams => [...oldExams, newExam]);
-    } ;
+        setExams(oldExams => [...oldExams, newExam]);
+    };
 
-    return (<>
-        <Table striped bordered>
-            <thead>
-                <tr>
-                    <th>Exam</th>
-                    <th>Score</th>
-                    <th>Date</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {exams.map((exam => <ExamRow key={exam.coursecode} exam={exam}
-                    examName={props.courses.filter(c => c.coursecode === exam.coursecode)[0].name}
-                    deleteExam={deleteExam}
-                />))}
-            </tbody>
-        </Table>
-        <ExamForm courses={props.courses.filter(course => !examCodes.includes(course.coursecode))} addExam={addExam} />
-    </>
+    return (<Switch>
+        <Route path='/' exact>
+            <Table striped bordered>
+                <thead>
+                    <tr>
+                        <th>Exam</th>
+                        <th>Score</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {exams.map((exam => <ExamRow key={exam.coursecode} exam={exam}
+                        examName={props.courses.filter(c => c.coursecode === exam.coursecode)[0].name}
+                        deleteExam={deleteExam}
+                    />))}
+                </tbody>
+            </Table>
+            <Link to='/add'><Button variant='success'>Add</Button></Link>
+        </Route>
+        <Route path='/add'>
+            <ExamForm courses={props.courses.filter(course => !examCodes.includes(course.coursecode))} addExam={addExam} />
+        </Route>
+        <Route path='/update'></Route>
+    </Switch>
     );
 }
 
@@ -67,37 +74,44 @@ function ExamControls(props) {
 }
 
 function ExamForm(props) {
-    const [course, setCourse] = useState('') ;  // props.courses[0].coursecode
-    const [score, setScore] = useState('') ;
-    const [date, setDate] = useState('') ;
-    const [errorMessage, setErrorMessage] = useState() ;
-    
+    const [course, setCourse] = useState('');  // props.courses[0].coursecode
+    const [score, setScore] = useState('');
+    const [date, setDate] = useState('');
+    const [errorMessage, setErrorMessage] = useState();
+
+    const [submitted, setSubmitted] = useState(false) ;
+
     const handleSubmit = (event) => {
-        event.preventDefault() ;
+        event.preventDefault();
 
         // MUST DO VALIDATION!!!!
-        let valid = true ;
-        if(course==='' || score==='' || date==='')
-            valid = false ;
-        const scorenumber = +score ;
-        if(scorenumber<18 || scorenumber>30)
-            valid = false ;
+        let valid = true;
+        if (course === '' || score === '' || date === '')
+            valid = false;
+        const scorenumber = +score;
+        if (scorenumber < 18 || scorenumber > 30)
+            valid = false;
         // ADD MORE CHECKS....
 
-        if(valid) {
-            setErrorMessage('') 
-            const exam = { coursecode: course, score: scorenumber, date: dayjs(date) } ;
+        if (valid) {
+            setErrorMessage('')
+            const exam = { coursecode: course, score: scorenumber, date: dayjs(date) };
             props.addExam(exam);
-            setCourse('');
-            setScore('');
-            setDate('');
+
+            // GO BACK TO THE HOME PAGE
+            setSubmitted(true) ;
+
+            // setCourse('');
+            // setScore('');
+            // setDate('');
         } else {
-            setErrorMessage('Error in the form...') ;
+            setErrorMessage('Error in the form...');
         }
 
-    } ;
+    };
 
-    return (
+    return (<>
+        {submitted && <Redirect to='/'></Redirect>}
         <Form>
             <span style={{ color: 'red' }}>{errorMessage}</span>
             <Form.Group controlId='selectedCourse'>
@@ -116,8 +130,9 @@ function ExamForm(props) {
                 <Form.Label>Date</Form.Label>
                 <Form.Control type='date' value={date} onChange={ev => setDate(ev.target.value)} />
             </Form.Group>
-            <Button onClick={handleSubmit}>Save</Button> <Button variant='secondary' >Cancel</Button>
-        </Form>);
+            <Button onClick={handleSubmit}>Save</Button>
+            <Link to='/'><Button variant='secondary' >Cancel</Button></Link>
+        </Form></>);
 }
 
 export { Title, ExamTable };
